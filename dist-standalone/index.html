@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MODEL VS REALITY — Restricted Mode</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <header class="fixed-banner">
+      <div>
+        <h1>MODEL VS REALITY</h1>
+        <p class="subtitle">BIM-neutral logic deduction puzzle sheet</p>
+      </div>
+      <div class="difficulty" id="difficultyMarker">Difficulty: Easy</div>
+    </header>
+
+    <main>
+      <section class="toolbar no-print">
+        <label for="seedInput">Seed</label>
+        <input id="seedInput" type="number" value="2026" />
+        <button id="generateBtn">Generate (Easy)</button>
+        <button id="clearBtn">Clear grids</button>
+        <button id="exportBtn">Export (Print PDF)</button>
+      </section>
+
+      <section class="print-page" id="page1">
+        <h2>Page 1 — Briefing & Clues</h2>
+
+        <div class="panel">
+          <h3>Legend</h3>
+          <div id="legend" class="legend-grid"></div>
+        </div>
+
+        <div class="panel">
+          <h3>Scenario stories</h3>
+          <ol id="stories"></ol>
+        </div>
+
+        <div class="panel">
+          <h3>Easy clue set</h3>
+          <ol id="clues"></ol>
+        </div>
+      </section>
+
+      <section class="print-page" id="page2">
+        <h2>Page 2 — Deduction Grids (icons only)</h2>
+        <p class="hint">Click each cell to cycle: blank → ❌ → ●.</p>
+        <div id="grids" class="grid-wrap"></div>
+      </section>
+    </main>
+
+    <script src="./app.js"></script>
+  </body>
+</html>

@@ -1,0 +1,171 @@
+:root {
+  --ink: #1d1d1d;
+  --line: #4d4d4d;
+  --paper: #ffffff;
+  --muted: #f2f2f2;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: Arial, Helvetica, sans-serif;
+  color: var(--ink);
+  background: #e6e6e6;
+}
+
+.fixed-banner {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: var(--paper);
+  border-bottom: 2px solid var(--line);
+  padding: 10px 18px;
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+}
+
+h1 {
+  margin: 0;
+  letter-spacing: 0.08em;
+  font-size: 1.4rem;
+}
+
+.subtitle {
+  margin: 4px 0 0;
+  font-size: 0.9rem;
+}
+
+.difficulty {
+  border: 1px solid var(--line);
+  padding: 6px 10px;
+  font-weight: 700;
+}
+
+.toolbar {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 12px 18px;
+}
+
+.toolbar input,
+.toolbar button {
+  border: 1px solid var(--line);
+  background: var(--paper);
+  color: var(--ink);
+  padding: 6px 10px;
+}
+
+.print-page {
+  width: 297mm;
+  min-height: 210mm;
+  background: var(--paper);
+  margin: 12px auto;
+  padding: 16mm;
+  border: 1px solid #b9b9b9;
+  display: grid;
+  grid-template-rows: auto auto auto 1fr;
+  gap: 10px;
+}
+
+.panel {
+  border: 1px solid var(--line);
+  padding: 8px;
+  background: #fcfcfc;
+}
+
+.panel h3 { margin: 0 0 6px; }
+
+.legend-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.legend-item {
+  border: 1px dashed var(--line);
+  padding: 8px;
+  display: grid;
+  grid-template-columns: 36px 1fr;
+  gap: 8px;
+  align-items: center;
+}
+
+.legend-item img,
+.icon-header img {
+  width: 30px;
+  height: 30px;
+  filter: grayscale(1);
+}
+
+.legend-item h4 {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.legend-item p {
+  margin: 2px 0 0;
+  font-size: 0.78rem;
+}
+
+.grid-wrap {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.logic-grid {
+  border: 1px solid var(--line);
+  border-collapse: collapse;
+  width: 100%;
+  table-layout: fixed;
+}
+
+.logic-grid th,
+.logic-grid td {
+  border: 1px solid var(--line);
+  text-align: center;
+  height: 44px;
+}
+
+.logic-grid th {
+  background: var(--muted);
+}
+
+.cell-btn {
+  font-size: 1.2rem;
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: var(--ink);
+}
+
+.hint { margin: 0; }
+
+@media print {
+  @page {
+    size: A4 landscape;
+    margin: 8mm;
+  }
+
+  body { background: white; }
+  .no-print { display: none !important; }
+  .fixed-banner {
+    position: static;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .print-page {
+    margin: 0;
+    border: none;
+    min-height: calc(210mm - 16mm);
+    break-after: page;
+    page-break-after: always;
+  }
+
+  #page2 { break-after: auto; page-break-after: auto; }
+}
