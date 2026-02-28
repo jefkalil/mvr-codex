@@ -19,7 +19,13 @@
       <section class="toolbar no-print">
         <label for="seedInput">Seed</label>
         <input id="seedInput" type="number" value="2026" />
-        <button id="generateBtn">Generate (Easy)</button>
+        <label for="difficultyInput">Difficulty</label>
+        <select id="difficultyInput">
+          <option value="easy" selected>Easy</option>
+          <option value="medium">Medium</option>
+          <option value="hard">Hard</option>
+        </select>
+        <button id="generateBtn">Generate</button>
         <button id="clearBtn">Clear grids</button>
         <button id="exportBtn">Export (Print PDF)</button>
       </section>
@@ -38,7 +44,7 @@
         </div>
 
         <div class="panel">
-          <h3>Easy clue set</h3>
+          <h3 id="clueHeading">Easy clue set</h3>
           <ol id="clues"></ol>
         </div>
       </section>

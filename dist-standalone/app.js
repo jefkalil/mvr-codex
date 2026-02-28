@@ -48,9 +48,11 @@
   ];
 
   const seedInput = document.getElementById('seedInput');
+  const difficultyInput = document.getElementById('difficultyInput');
   const legendEl = document.getElementById('legend');
   const storiesEl = document.getElementById('stories');
   const cluesEl = document.getElementById('clues');
+  const clueHeadingEl = document.getElementById('clueHeading');
   const gridsEl = document.getElementById('grids');
 
   function seededRng(seed) {
@@ -146,21 +148,37 @@
     gridsEl.appendChild(makeGrid(groups.artifact, groups.day, 'artifact-day'));
   }
 
-  function generateEasy(seed) {
+  const difficultyRules = {
+    easy: { storyCount: 4, clueCount: 4, label: 'Easy' },
+    medium: { storyCount: 5, clueCount: 5, label: 'Medium' },
+    hard: { storyCount: 6, clueCount: 6, label: 'Hard' },
+  };
+
+  function generatePuzzle(seed, difficulty) {
     const rand = seededRng(seed);
-    const stories = pickN(storyPool, 4, rand);
+    const settings = difficultyRules[difficulty] || difficultyRules.easy;
+
+    const stories = pickN(storyPool, settings.storyCount, rand);
     storiesEl.innerHTML = stories.map((s) => `<li>${s}</li>`).join('');
 
-    const clues = pickN(clueTemplates, 4, rand).map((fn) => fn(groups.role, groups.artifact, groups.day));
+    const clues = pickN(clueTemplates, settings.clueCount, rand).map((fn) => fn(groups.role, groups.artifact, groups.day));
     cluesEl.innerHTML = clues.map((c) => `<li>${c}</li>`).join('');
 
+    clueHeadingEl.textContent = `${settings.label} clue set`;
     renderGrids();
-    document.getElementById('difficultyMarker').textContent = `Difficulty: Easy · Seed ${seed}`;
+    document.getElementById('difficultyMarker').textContent = `Difficulty: ${settings.label} · Seed ${seed}`;
   }
+
+  function updateGenerateButtonLabel() {
+    const settings = difficultyRules[difficultyInput.value] || difficultyRules.easy;
+    document.getElementById('generateBtn').textContent = `Generate (${settings.label})`;
+  }
+
+  difficultyInput.addEventListener('change', updateGenerateButtonLabel);
 
   document.getElementById('generateBtn').addEventListener('click', () => {
     const seed = Number(seedInput.value || 0);
-    generateEasy(seed);
+    generatePuzzle(seed, difficultyInput.value);
   });
 
   document.getElementById('clearBtn').addEventListener('click', () => {
@@ -173,5 +191,6 @@
   document.getElementById('exportBtn').addEventListener('click', () => window.print());
 
   renderLegend();
-  generateEasy(Number(seedInput.value || 2026));
+  updateGenerateButtonLabel();
+  generatePuzzle(Number(seedInput.value || 2026), difficultyInput.value);
 })();
