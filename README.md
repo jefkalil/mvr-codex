@@ -1,2 +1,2 @@
 # mvr-codex
-Reality vs Model for Codex project
+Reality vs Model for Codex project testing
