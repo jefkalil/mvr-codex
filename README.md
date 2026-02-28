@@ -8,6 +8,8 @@ Use this mode in locked-down environments (for example npm registry returns HTTP
 ### Option A: Open directly
 Open `dist-standalone/index.html` in your browser.
 
+For hosted preview tools that open repository root by default, `index.html` redirects automatically to `dist-standalone/index.html`.
+
 ### Option B: Serve with Python
 ```bash
 python -m http.server 8000
