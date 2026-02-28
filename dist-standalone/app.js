@@ -52,6 +52,10 @@
   const storiesEl = document.getElementById('stories');
   const cluesEl = document.getElementById('clues');
   const gridsEl = document.getElementById('grids');
+  const statusEl = document.getElementById('gameStatus');
+
+  let currentSolution = null;
+  let gameEnded = false;
 
   function seededRng(seed) {
     let state = (seed >>> 0) || 1;
@@ -68,6 +72,15 @@
       [copy[i], copy[j]] = [copy[j], copy[i]];
     }
     return copy.slice(0, n);
+  }
+
+  function setStatus(message) {
+    statusEl.textContent = message;
+  }
+
+  function setCellState(btn, state) {
+    btn.dataset.state = String(state);
+    btn.textContent = state === 1 ? '❌' : state === 2 ? '●' : '';
   }
 
   function renderLegend() {
@@ -125,9 +138,11 @@
         btn.dataset.position = `${tag}:${rowIndex}:${colIndex}`;
         btn.textContent = '';
         btn.addEventListener('click', () => {
+          if (gameEnded) {
+            return;
+          }
           const nextState = (Number(btn.dataset.state) + 1) % 3;
-          btn.dataset.state = String(nextState);
-          btn.textContent = nextState === 1 ? '❌' : nextState === 2 ? '●' : '';
+          setCellState(btn, nextState);
         });
         td.appendChild(btn);
         tr.appendChild(td);
@@ -146,6 +161,91 @@
     gridsEl.appendChild(makeGrid(groups.artifact, groups.day, 'artifact-day'));
   }
 
+  function buildSolution(seed) {
+    const rand = seededRng(seed + 911);
+    const artifactOrder = pickN([0, 1, 2], 3, rand);
+    const dayOrder = pickN([0, 1, 2], 3, rand);
+
+    const roleToArtifact = artifactOrder;
+    const roleToDay = dayOrder;
+    const artifactToDay = [0, 0, 0];
+    roleToArtifact.forEach((artifactIndex, roleIndex) => {
+      artifactToDay[artifactIndex] = roleToDay[roleIndex];
+    });
+
+    return {
+      roleArtifact: roleToArtifact,
+      roleDay: roleToDay,
+      artifactDay: artifactToDay,
+    };
+  }
+
+  function getExpectedState(position) {
+    if (!currentSolution) {
+      return 0;
+    }
+
+    const [tag, rowText, colText] = position.split(':');
+    const row = Number(rowText);
+    const col = Number(colText);
+
+    if (tag === 'role-artifact') {
+      return currentSolution.roleArtifact[row] === col ? 2 : 1;
+    }
+    if (tag === 'role-day') {
+      return currentSolution.roleDay[row] === col ? 2 : 1;
+    }
+
+    return currentSolution.artifactDay[row] === col ? 2 : 1;
+  }
+
+  function clearGrids() {
+    if (gameEnded) {
+      setStatus('Game has ended. Generate a new puzzle to play again.');
+      return;
+    }
+
+    document.querySelectorAll('.cell-btn').forEach((btn) => {
+      setCellState(btn, 0);
+    });
+    setStatus('Grids cleared.');
+  }
+
+  function solveAttempt() {
+    if (gameEnded) {
+      setStatus('Game has ended. Generate a new puzzle to play again.');
+      return;
+    }
+
+    const cells = [...document.querySelectorAll('.cell-btn')];
+    let mismatches = 0;
+
+    cells.forEach((btn) => {
+      const expected = getExpectedState(btn.dataset.position);
+      if (Number(btn.dataset.state) !== expected) {
+        mismatches += 1;
+      }
+    });
+
+    if (mismatches === 0) {
+      setStatus('Correct! Puzzle solved.');
+      gameEnded = true;
+      return;
+    }
+
+    setStatus(`Not solved yet — ${mismatches} cell${mismatches === 1 ? '' : 's'} still incorrect.`);
+  }
+
+  function revealSolution() {
+    const cells = [...document.querySelectorAll('.cell-btn')];
+    cells.forEach((btn) => {
+      setCellState(btn, getExpectedState(btn.dataset.position));
+    });
+
+    gameEnded = true;
+    setStatus('Solution revealed. Game ended. Generate a new puzzle to play again.');
+  }
+
   function generateEasy(seed) {
     const rand = seededRng(seed);
     const stories = pickN(storyPool, 4, rand);
@@ -155,6 +255,9 @@
     cluesEl.innerHTML = clues.map((c) => `<li>${c}</li>`).join('');
 
     renderGrids();
+    currentSolution = buildSolution(seed);
+    gameEnded = false;
+    setStatus('Puzzle generated. Fill the grids, then click Solve.');
     document.getElementById('difficultyMarker').textContent = `Difficulty: Easy · Seed ${seed}`;
   }
 
@@ -163,12 +266,9 @@
     generateEasy(seed);
   });
 
-  document.getElementById('clearBtn').addEventListener('click', () => {
-    document.querySelectorAll('.cell-btn').forEach((btn) => {
-      btn.dataset.state = '0';
-      btn.textContent = '';
-    });
-  });
+  document.getElementById('clearBtn').addEventListener('click', clearGrids);
+  document.getElementById('solveBtn').addEventListener('click', solveAttempt);
+  document.getElementById('viewSolutionBtn').addEventListener('click', revealSolution);
 
   document.getElementById('exportBtn').addEventListener('click', () => window.print());
 
