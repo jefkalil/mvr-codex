@@ -1,36 +1,48 @@
-# mvr-codex
+# MODEL VS REALITY — Static SPA
 
-MODEL VS REALITY puzzle project with two run modes:
+This repository is a standalone, no-bundler single-page app that generates printable **MODEL VS REALITY** logic puzzles.
 
-## Restricted Mode (no dependency installation)
-Use this mode in locked-down environments (for example npm registry returns HTTP 403).
+## Output structure
 
-### Option A: Open directly
-Open `dist-standalone/index.html` in your browser.
+- `dist-standalone/index.html`
+- `dist-standalone/app.js`
+- `dist-standalone/styles.css`
+- `dist-standalone/assets/`
 
-### Option B: Serve with Python
+## Puzzle rules implemented
+
+- Exactly **3 categories** per puzzle: **Actors**, **Locations**, **Clashes**.
+- Difficulty controls category size:
+  - **Easy** = 3 items per category
+  - **Medium** = 4 items per category
+  - **Hard** = 5 items per category
+- Labels appear in the **Legend** only.
+- Puzzle areas (clues, grids, verdict board) are icon-first.
+- Two-page print structure:
+  - **Page 1**: briefing, legend, clues, and final verdict format
+  - **Page 2**: deduction grids and icon verdict board
+- **🦺 marker rule**:
+  - Exactly one Clash receives the 🦺 marker.
+  - The final verdict is the Actor + Location paired to that marked Clash.
+
+## Controls
+
+- Generate Easy
+- Generate Medium
+- Generate Hard
+- Clear
+- Reveal Solution
+- Export/Print
+
+## Run locally
+
+Use any local static server. Example:
+
 ```bash
 python -m http.server 8000
 ```
-Then visit:
+
+Then open:
 
 - `http://localhost:8000/dist-standalone/index.html`
 
-### Features in Restricted Mode
-- Two-page A4 landscape printable layout (grayscale-friendly).
-- Fixed **MODEL VS REALITY** title/subtitle and difficulty marker.
-- Legend blocks with icon, short name, and BIM-neutral descriptions.
-- Story and clue sections.
-- Three icon-only deduction grids with click cycle: `blank → ❌ → ●`.
-- Deterministic `Generate (Easy)` using a seeded RNG.
-- `Export` via browser print (`window.print`) with print CSS for PDF export.
-
-## Full Dev Mode (for environments with npm access)
-If you have npm registry access, use the existing React/Vite source setup under `/src`:
-
-```bash
-npm install
-npm run dev
-```
-
-> Full Dev Mode is optional in this environment; Restricted Mode is fully runnable without installs.
