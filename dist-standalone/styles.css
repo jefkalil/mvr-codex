@@ -1,9 +1,9 @@
 :root {
-  --bg: #f4f6f8;
-  --ink: #13202b;
+  --bg: #f2f2f2;
+  --ink: #1f1f1f;
   --panel: #ffffff;
-  --line: #bcc7d3;
-  --accent: #1d4f7a;
+  --line: #b5b5b5;
+  --accent: #2f2f2f;
 }
 
 * {
@@ -26,7 +26,7 @@ body {
   align-items: center;
   gap: 1rem;
   padding: 0.8rem 1rem;
-  background: #0f2537;
+  background: #222;
   color: #fff;
 }
 
@@ -64,6 +64,38 @@ p {
   margin-bottom: 1rem;
 }
 
+
+
+.difficulty-picker {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0;
+  padding: 0.25rem 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: 0.4rem;
+}
+
+.difficulty-picker legend {
+  padding: 0 0.2rem;
+  font-size: 0.85rem;
+}
+
+.difficulty-picker label,
+.solution-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.92rem;
+}
+
+.solution-area {
+  display: none;
+}
+
+body.show-solution .solution-area {
+  display: grid;
+}
 button,
 input {
   font: inherit;
@@ -83,10 +115,19 @@ button:hover {
 }
 
 input {
-  width: 7rem;
   padding: 0.4rem;
   border-radius: 0.4rem;
   border: 1px solid var(--line);
+}
+
+#seedInput {
+  width: 7rem;
+}
+
+input[type="radio"],
+input[type="checkbox"] {
+  width: auto;
+  padding: 0;
 }
 
 .print-page {
@@ -108,7 +149,7 @@ input {
 }
 
 .meta {
-  color: #3e5568;
+  color: #4f4f4f;
   font-size: 0.9rem;
 }
 
@@ -138,7 +179,7 @@ input {
 }
 
 .with-marker {
-  outline: 2px dashed #ef8a00;
+  outline: 2px dashed #666;
   outline-offset: 2px;
   border-radius: 2px;
 }
@@ -181,7 +222,7 @@ input {
 }
 
 .icon-header {
-  background: #eef2f6;
+  background: #efefef;
 }
 
 .cell-btn {
