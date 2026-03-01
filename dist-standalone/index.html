@@ -17,11 +17,21 @@
 
     <main class="app-main">
       <section class="toolbar no-print" aria-label="Puzzle controls">
-        <button type="button" id="generateEasyBtn">Generate Easy</button>
-        <button type="button" id="generateMediumBtn">Generate Medium</button>
-        <button type="button" id="generateHardBtn">Generate Hard</button>
+        <button type="button" id="generateBtn">Generate</button>
+
+        <fieldset class="difficulty-picker" aria-label="Difficulty picker">
+          <legend>Difficulty</legend>
+          <label><input type="radio" name="difficulty" value="easy" checked />Easy</label>
+          <label><input type="radio" name="difficulty" value="medium" />Medium</label>
+          <label><input type="radio" name="difficulty" value="hard" />Hard</label>
+        </fieldset>
+
+        <label class="solution-toggle" for="showSolutionToggle">
+          <input id="showSolutionToggle" type="checkbox" />
+          Show Solution
+        </label>
+
         <button type="button" id="clearBtn">Clear</button>
-        <button type="button" id="revealBtn">Reveal Solution</button>
         <button type="button" id="exportBtn">Export/Print</button>
         <label for="seedInput">Seed</label>
         <input id="seedInput" type="number" value="2026" />
@@ -62,8 +72,8 @@
         <h2>Page 2 — Icon Grids & Verdict Board</h2>
         <p class="meta">Cell cycle: blank → ❌ → ●</p>
         <div id="grids" class="grid-wrap"></div>
-        <article class="panel">
-          <h3>Verdict Board (icons only)</h3>
+        <article class="panel solution-area">
+          <h3>Solution</h3>
           <div id="verdictBoard" class="verdict-board"></div>
         </article>
       </section>

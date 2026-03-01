@@ -35,6 +35,7 @@
     puzzle: null,
     difficulty: 'easy',
     seed: 2026,
+    showSolution: false,
   };
 
   function rngFactory(seed) {
@@ -222,11 +223,11 @@
     if (!container || !p) return;
 
     container.innerHTML = `
-      <div class="slot" data-slot="actor"></div>
+      <div class="slot" data-slot="actor">${icon(p.actors[p.marker.actor])}</div>
       <span>@</span>
-      <div class="slot" data-slot="location"></div>
+      <div class="slot" data-slot="location">${icon(p.locations[p.marker.location])}</div>
       <span>↔</span>
-      <div class="slot" data-slot="clash"></div>
+      <div class="slot" data-slot="clash">${icon(p.clashes[p.marker.clash], 'with-marker')}</div>
       <span class="marker">🦺</span>
     `;
   }
@@ -238,25 +239,35 @@
     chip.textContent = `${p.cfg.label} · ${p.cfg.size}×${p.cfg.size}×${p.cfg.size} · Seed ${p.seed}`;
   }
 
+  function applySolutionVisibility() {
+    document.body.classList.toggle('show-solution', state.showSolution);
+  }
+
+  function selectedDifficulty() {
+    const selected = document.querySelector('input[name="difficulty"]:checked');
+    return selected && DIFFICULTY[selected.value] ? selected.value : 'easy';
+  }
+
   function generate(difficultyKey) {
     const seedInput = document.getElementById('seedInput');
     const seed = Number(seedInput ? seedInput.value : 0) || 0;
     state.seed = seed;
-    state.difficulty = difficultyKey;
-    state.puzzle = buildPuzzle(seed, difficultyKey);
+    state.difficulty = DIFFICULTY[difficultyKey] ? difficultyKey : 'easy';
+    state.puzzle = buildPuzzle(seed, state.difficulty);
 
     renderLegend();
     renderScenarioAndClues();
     renderGrids();
     renderVerdictBoard();
     updateHeader();
+
+    if (state.showSolution) {
+      revealSolution();
+    }
   }
 
   function clearBoard() {
     document.querySelectorAll('.cell-btn').forEach((btn) => setCell(btn, 0));
-    document.querySelectorAll('#verdictBoard .slot').forEach((slot) => {
-      slot.innerHTML = '';
-    });
   }
 
   function revealSolution() {
@@ -266,36 +277,51 @@
       const col = Number(btn.dataset.col);
       setCell(btn, expectedCellState(tag, row, col));
     });
-
-    const p = state.puzzle;
-    if (!p) return;
-    const actorSlot = document.querySelector('.slot[data-slot="actor"]');
-    const locationSlot = document.querySelector('.slot[data-slot="location"]');
-    const clashSlot = document.querySelector('.slot[data-slot="clash"]');
-
-    if (actorSlot) actorSlot.innerHTML = icon(p.actors[p.marker.actor]);
-    if (locationSlot) locationSlot.innerHTML = icon(p.locations[p.marker.location]);
-    if (clashSlot) clashSlot.innerHTML = icon(p.clashes[p.marker.clash], 'with-marker');
   }
 
   function bindEvents() {
-    const easy = document.getElementById('generateEasyBtn');
-    const medium = document.getElementById('generateMediumBtn');
-    const hard = document.getElementById('generateHardBtn');
+    const generateBtn = document.getElementById('generateBtn');
     const clear = document.getElementById('clearBtn');
-    const reveal = document.getElementById('revealBtn');
+    const solutionToggle = document.getElementById('showSolutionToggle');
     const printBtn = document.getElementById('exportBtn');
+    const difficultyOptions = document.querySelectorAll('input[name="difficulty"]');
 
-    if (easy) easy.addEventListener('click', () => generate('easy'));
-    if (medium) medium.addEventListener('click', () => generate('medium'));
-    if (hard) hard.addEventListener('click', () => generate('hard'));
-    if (clear) clear.addEventListener('click', clearBoard);
-    if (reveal) reveal.addEventListener('click', revealSolution);
+    difficultyOptions.forEach((option) => {
+      option.addEventListener('change', () => {
+        state.difficulty = selectedDifficulty();
+        generate(state.difficulty);
+      });
+    });
+
+    if (generateBtn) {
+      generateBtn.addEventListener('click', () => {
+        generate(selectedDifficulty());
+      });
+    }
+
+    if (clear) {
+      clear.addEventListener('click', () => {
+        clearBoard();
+      });
+    }
+
+    if (solutionToggle) {
+      solutionToggle.addEventListener('change', () => {
+        state.showSolution = solutionToggle.checked;
+        applySolutionVisibility();
+        if (state.showSolution) {
+          revealSolution();
+        }
+      });
+    }
+
     if (printBtn) printBtn.addEventListener('click', () => window.print());
   }
 
   document.addEventListener('DOMContentLoaded', () => {
     bindEvents();
-    generate('easy');
+    state.difficulty = selectedDifficulty();
+    generate(state.difficulty);
+    applySolutionVisibility();
   });
 })();
