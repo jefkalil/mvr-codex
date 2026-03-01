@@ -121,10 +121,63 @@
       section('Actors', p.actors) + section('Locations', p.locations) + section('Clashes', p.clashes);
   }
 
-  function markerClashIcon() {
-    const p = state.puzzle;
-    if (!p) return '';
-    return icon(p.clashes[p.marker.clash], 'with-marker') + '<span class="marker">🦺</span>';
+  function evidenceSentence(type, difficulty, actor, clueIndex) {
+    if (difficulty === 'medium' && clueIndex === 0) {
+      return `If ${actor.label} had approved this model handoff, the coordination log would force a different follow-up check, so this pairing is excluded.`;
+    }
+
+    if (difficulty === 'hard') {
+      if (type === 'location-clash') {
+        return 'The coordination trail links this area to a different issue stream, so this location cannot align with this clash in the as-built evidence.';
+      }
+      return `${actor.label} cross-checked model ownership against issue history, and the evidence removes this pairing from the viable set.`;
+    }
+
+    return `${actor.label} reviewed the BIM evidence chain and ruled out this pairing.`;
+  }
+
+  function buildEvidenceClues(p) {
+    const clues = [];
+
+    for (let actorIdx = 0; actorIdx < p.cfg.size; actorIdx += 1) {
+      for (let locationIdx = 0; locationIdx < p.cfg.size; locationIdx += 1) {
+        if (p.maps.actorToLocation[actorIdx] === locationIdx) continue;
+        clues.push({
+          type: 'actor-location',
+          left: p.actors[actorIdx],
+          right: p.locations[locationIdx],
+          actor: p.actors[actorIdx],
+        });
+      }
+    }
+
+    for (let actorIdx = 0; actorIdx < p.cfg.size; actorIdx += 1) {
+      for (let clashIdx = 0; clashIdx < p.cfg.size; clashIdx += 1) {
+        if (p.maps.actorToClash[actorIdx] === clashIdx) continue;
+        clues.push({
+          type: 'actor-clash',
+          left: p.actors[actorIdx],
+          right: p.clashes[clashIdx],
+          actor: p.actors[actorIdx],
+        });
+      }
+    }
+
+    if (p.cfg.size >= 5) {
+      for (let locationIdx = 0; locationIdx < p.cfg.size; locationIdx += 1) {
+        for (let clashIdx = 0; clashIdx < p.cfg.size; clashIdx += 1) {
+          if (p.maps.locationToClash[locationIdx] === clashIdx) continue;
+          clues.push({
+            type: 'location-clash',
+            left: p.locations[locationIdx],
+            right: p.clashes[clashIdx],
+            actor: p.actors[(locationIdx + clashIdx) % p.cfg.size],
+          });
+        }
+      }
+    }
+
+    return clues;
   }
 
   function renderScenarioAndClues() {
@@ -139,17 +192,16 @@
     clueTitle.textContent = `${p.cfg.label} clues · ${p.cfg.size} items per category`;
     scenarioText.textContent = `A single true chain links one Actor, one Location, and one Clash. Use icon-only evidence to resolve the final verdict.`;
 
-    const clueHtml = [];
-    for (let i = 0; i < p.cfg.size; i += 1) {
-      clueHtml.push(
-        `<li>${icon(p.actors[i])} ↔ ${icon(p.locations[p.maps.actorToLocation[i]])}</li>`
-      );
-      clueHtml.push(
-        `<li>${icon(p.actors[i])} ↔ ${icon(p.clashes[p.maps.actorToClash[i]])}</li>`
-      );
-    }
+    const clueHtml = buildEvidenceClues(p).map((clue, index) => {
+      const text = evidenceSentence(clue.type, state.difficulty, clue.actor, index);
+      return `
+        <li class="evidence-clue">
+          <p class="reasoning">${text}</p>
+          <div class="elimination">${icon(clue.left)} <span>×</span> ${icon(clue.right)}</div>
+        </li>
+      `;
+    });
 
-    clueHtml.push(`<li>${markerClashIcon()} = final reality marker</li>`);
     cluesList.innerHTML = clueHtml.join('');
 
     markerRuleText.textContent = '🦺 marker rule: exactly one clash carries 🦺; the verdict must include the actor and location paired to that clash.';

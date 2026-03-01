@@ -195,10 +195,20 @@ input[type="checkbox"] {
   gap: 0.35rem;
 }
 
-#cluesList li {
-  display: flex;
+.evidence-clue {
+  display: grid;
+  gap: 0.25rem;
+  margin-bottom: 0.25rem;
+}
+
+.evidence-clue .reasoning {
+  line-height: 1.3;
+}
+
+.evidence-clue .elimination {
+  display: inline-flex;
   align-items: center;
-  gap: 0.45rem;
+  gap: 0.4rem;
 }
 
 .grid-wrap {
