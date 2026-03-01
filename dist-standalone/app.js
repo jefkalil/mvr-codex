@@ -1,150 +1,200 @@
-(function () {
-  const ICONS = {
-    architect: './assets/icons/architect.svg',
-    engineer: './assets/icons/engineer.svg',
-    contractor: './assets/icons/contractor.svg',
-    survey: './assets/icons/survey.svg',
-    site: './assets/icons/site.svg',
-    permit: './assets/icons/permit.svg',
-    monday: './assets/icons/monday.svg',
-    wednesday: './assets/icons/wednesday.svg',
-    friday: './assets/icons/friday.svg',
-  };
+(() => {
+  const ICON_PATH = './assets/icons/';
 
-  const groups = {
-    role: [
-      { key: 'architect', short: 'Architect', desc: 'Design intent coordinator.' },
-      { key: 'engineer', short: 'Engineer', desc: 'System performance reviewer.' },
-      { key: 'contractor', short: 'Contractor', desc: 'Execution and sequencing lead.' },
+  const CATEGORIES = {
+    actors: [
+      { id: 'architect', label: 'Architect', icon: `${ICON_PATH}architect.svg` },
+      { id: 'engineer', label: 'Engineer', icon: `${ICON_PATH}engineer.svg` },
+      { id: 'contractor', label: 'Contractor', icon: `${ICON_PATH}contractor.svg` },
+      { id: 'surveyor', label: 'Surveyor', icon: `${ICON_PATH}survey.svg` },
+      { id: 'inspector', label: 'Inspector', icon: `${ICON_PATH}permit.svg` },
     ],
-    artifact: [
-      { key: 'survey', short: 'Survey', desc: 'Observed baseline capture set.' },
-      { key: 'site', short: 'Site Plan', desc: 'Location and context package.' },
-      { key: 'permit', short: 'Permit Set', desc: 'Approval-oriented documentation.' },
+    locations: [
+      { id: 'site', label: 'Site', icon: `${ICON_PATH}site.svg` },
+      { id: 'permit-office', label: 'Permit Office', icon: `${ICON_PATH}permit.svg` },
+      { id: 'draft-room', label: 'Draft Room', icon: `${ICON_PATH}architect.svg` },
+      { id: 'coordination-hub', label: 'Coordination Hub', icon: `${ICON_PATH}engineer.svg` },
+      { id: 'field-gate', label: 'Field Gate', icon: `${ICON_PATH}contractor.svg` },
     ],
-    day: [
-      { key: 'monday', short: 'Monday', desc: 'First review checkpoint.' },
-      { key: 'wednesday', short: 'Wednesday', desc: 'Mid-cycle validation point.' },
-      { key: 'friday', short: 'Friday', desc: 'Final closeout milestone.' },
+    clashes: [
+      { id: 'survey-gap', label: 'Survey Gap', icon: `${ICON_PATH}survey.svg` },
+      { id: 'design-drift', label: 'Design Drift', icon: `${ICON_PATH}architect.svg` },
+      { id: 'system-overlap', label: 'System Overlap', icon: `${ICON_PATH}engineer.svg` },
+      { id: 'sequence-jam', label: 'Sequence Jam', icon: `${ICON_PATH}contractor.svg` },
+      { id: 'permit-block', label: 'Permit Block', icon: `${ICON_PATH}permit.svg` },
     ],
   };
 
-  const storyPool = [
-    'A shared model was aligned with field notes after one team flagged a mismatch.',
-    'A schedule update moved one package later to absorb a coordination issue.',
-    'One discipline completed review earlier because their source data was stable.',
-    'A re-check was triggered when an assumption in the model diverged from reality.',
-    'The final package passed after all parties agreed on one consistent baseline.',
-    'A handoff was delayed until an icon-marked package was validated by another role.',
-  ];
+  const DIFFICULTY = {
+    easy: { size: 3, label: 'Easy' },
+    medium: { size: 4, label: 'Medium' },
+    hard: { size: 5, label: 'Hard' },
+  };
 
-  const clueTemplates = [
-    (r, a, d) => `${r[0].short} did not deliver on ${d[2].short}.`,
-    (r, a, d) => `${a[1].short} was reviewed on ${d[1].short}.`,
-    (r, a, d) => `${r[2].short} handled the ${a[2].short}.`,
-    (r, a, d) => `${a[0].short} was completed before ${a[2].short}.`,
-    (r, a, d) => `${r[1].short} worked after ${r[0].short}.`,
-    (r, a, d) => `${d[0].short} was paired with neither ${a[2].short} nor ${r[1].short}.`,
-  ];
+  const state = {
+    puzzle: null,
+    difficulty: 'easy',
+    seed: 2026,
+  };
 
-  const seedInput = document.getElementById('seedInput');
-  const difficultyInput = document.getElementById('difficultyInput');
-  const legendEl = document.getElementById('legend');
-  const storiesEl = document.getElementById('stories');
-  const cluesEl = document.getElementById('clues');
-  const clueHeadingEl = document.getElementById('clueHeading');
-  const gridsEl = document.getElementById('grids');
-  const statusEl = document.getElementById('gameStatus');
-
-  let currentSolution = null;
-  let gameEnded = false;
-
-  function seededRng(seed) {
-    let state = (seed >>> 0) || 1;
-    return function next() {
-      state = (1664525 * state + 1013904223) >>> 0;
-      return state / 4294967296;
+  function rngFactory(seed) {
+    let s = (seed >>> 0) || 1;
+    return () => {
+      s = (1664525 * s + 1013904223) >>> 0;
+      return s / 4294967296;
     };
   }
 
-  function pickN(arr, n, rand) {
-    const copy = arr.slice();
-    for (let i = copy.length - 1; i > 0; i -= 1) {
-      const j = Math.floor(rand() * (i + 1));
-      [copy[i], copy[j]] = [copy[j], copy[i]];
+  function shuffle(list, rnd) {
+    const arr = list.slice();
+    for (let i = arr.length - 1; i > 0; i -= 1) {
+      const j = Math.floor(rnd() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
     }
-    return copy.slice(0, n);
+    return arr;
   }
 
-  function setStatus(message) {
-    statusEl.textContent = message;
+  function icon(item, extraClass = '') {
+    return `<img class="icon ${extraClass}" src="${item.icon}" alt="" aria-hidden="true" />`;
   }
 
-  function setCellState(btn, state) {
-    btn.dataset.state = String(state);
-    btn.textContent = state === 1 ? '❌' : state === 2 ? '●' : '';
+  function buildPuzzle(seed, difficultyKey) {
+    const cfg = DIFFICULTY[difficultyKey];
+    const rnd = rngFactory(seed);
+    const size = cfg.size;
+
+    const actors = shuffle(CATEGORIES.actors, rnd).slice(0, size);
+    const locations = shuffle(CATEGORIES.locations, rnd).slice(0, size);
+    const clashes = shuffle(CATEGORIES.clashes, rnd).slice(0, size);
+
+    const actorToLocation = shuffle([...Array(size).keys()], rnd);
+    const actorToClash = shuffle([...Array(size).keys()], rnd);
+    const locationToClash = Array(size).fill(0);
+
+    actorToLocation.forEach((locIdx, actorIdx) => {
+      locationToClash[locIdx] = actorToClash[actorIdx];
+    });
+
+    const markerClashIndex = Math.floor(rnd() * size);
+    const markerLocationIndex = locationToClash.findIndex((val) => val === markerClashIndex);
+    const markerActorIndex = actorToLocation.findIndex((val) => val === markerLocationIndex);
+
+    return {
+      cfg,
+      seed,
+      actors,
+      locations,
+      clashes,
+      maps: { actorToLocation, actorToClash, locationToClash },
+      marker: { actor: markerActorIndex, location: markerLocationIndex, clash: markerClashIndex },
+    };
+  }
+
+  function expectedCellState(tag, row, col) {
+    const p = state.puzzle;
+    if (!p) return 0;
+    if (tag === 'actor-location') return p.maps.actorToLocation[row] === col ? 2 : 1;
+    if (tag === 'actor-clash') return p.maps.actorToClash[row] === col ? 2 : 1;
+    return p.maps.locationToClash[row] === col ? 2 : 1;
   }
 
   function renderLegend() {
-    const items = [...groups.role, ...groups.artifact, ...groups.day];
-    legendEl.innerHTML = items
-      .map(
-        (item) => `
-        <article class="legend-item">
-          <img src="${ICONS[item.key]}" alt="${item.short} icon" />
-          <div>
-            <h4>${item.short}</h4>
-            <p>${item.desc}</p>
-          </div>
-        </article>
-      `
-      )
-      .join('');
+    const legend = document.getElementById('legend');
+    const p = state.puzzle;
+    if (!legend || !p) return;
+
+    const section = (title, items) => `
+      <section>
+        <h4>${title}</h4>
+        <ul class="legend-list">
+          ${items
+            .map(
+              (item) => `<li>${icon(item)} <span>${item.label}</span></li>`
+            )
+            .join('')}
+        </ul>
+      </section>
+    `;
+
+    legend.innerHTML =
+      section('Actors', p.actors) + section('Locations', p.locations) + section('Clashes', p.clashes);
   }
 
-  function makeGrid(left, top, tag) {
+  function markerClashIcon() {
+    const p = state.puzzle;
+    if (!p) return '';
+    return icon(p.clashes[p.marker.clash], 'with-marker') + '<span class="marker">🦺</span>';
+  }
+
+  function renderScenarioAndClues() {
+    const p = state.puzzle;
+    if (!p) return;
+
+    const scenarioText = document.getElementById('scenarioText');
+    const clueTitle = document.getElementById('clueTitle');
+    const cluesList = document.getElementById('cluesList');
+    const markerRuleText = document.getElementById('markerRuleText');
+
+    clueTitle.textContent = `${p.cfg.label} clues · ${p.cfg.size} items per category`;
+    scenarioText.textContent = `A single true chain links one Actor, one Location, and one Clash. Use icon-only evidence to resolve the final verdict.`;
+
+    const clueHtml = [];
+    for (let i = 0; i < p.cfg.size; i += 1) {
+      clueHtml.push(
+        `<li>${icon(p.actors[i])} ↔ ${icon(p.locations[p.maps.actorToLocation[i]])}</li>`
+      );
+      clueHtml.push(
+        `<li>${icon(p.actors[i])} ↔ ${icon(p.clashes[p.maps.actorToClash[i]])}</li>`
+      );
+    }
+
+    clueHtml.push(`<li>${markerClashIcon()} = final reality marker</li>`);
+    cluesList.innerHTML = clueHtml.join('');
+
+    markerRuleText.textContent = '🦺 marker rule: exactly one clash carries 🦺; the verdict must include the actor and location paired to that clash.';
+  }
+
+  function setCell(btn, stateNum) {
+    btn.dataset.state = String(stateNum);
+    btn.textContent = stateNum === 1 ? '❌' : stateNum === 2 ? '●' : '';
+  }
+
+  function createGrid(leftItems, topItems, tag) {
     const table = document.createElement('table');
     table.className = 'logic-grid';
-    table.setAttribute('aria-label', `${tag} deduction grid`);
 
     const thead = document.createElement('thead');
-    const hr = document.createElement('tr');
-    const empty = document.createElement('th');
-    empty.textContent = '';
-    hr.appendChild(empty);
-
-    top.forEach((item) => {
+    const headerRow = document.createElement('tr');
+    headerRow.appendChild(document.createElement('th'));
+    topItems.forEach((item) => {
       const th = document.createElement('th');
       th.className = 'icon-header';
-      th.innerHTML = `<img src="${ICONS[item.key]}" alt="${item.short}" />`;
-      hr.appendChild(th);
+      th.innerHTML = icon(item);
+      headerRow.appendChild(th);
     });
-    thead.appendChild(hr);
+    thead.appendChild(headerRow);
     table.appendChild(thead);
 
     const tbody = document.createElement('tbody');
-    left.forEach((lItem, rowIndex) => {
+    leftItems.forEach((leftItem, row) => {
       const tr = document.createElement('tr');
-      const rowLabel = document.createElement('th');
-      rowLabel.className = 'icon-header';
-      rowLabel.innerHTML = `<img src="${ICONS[lItem.key]}" alt="${lItem.short}" />`;
-      tr.appendChild(rowLabel);
+      const rowHeader = document.createElement('th');
+      rowHeader.className = 'icon-header';
+      rowHeader.innerHTML = icon(leftItem);
+      tr.appendChild(rowHeader);
 
-      top.forEach((tItem, colIndex) => {
+      topItems.forEach((_, col) => {
         const td = document.createElement('td');
         const btn = document.createElement('button');
-        btn.className = 'cell-btn';
         btn.type = 'button';
+        btn.className = 'cell-btn';
+        btn.dataset.tag = tag;
+        btn.dataset.row = String(row);
+        btn.dataset.col = String(col);
         btn.dataset.state = '0';
-        btn.dataset.pair = `${lItem.key}-${tItem.key}`;
-        btn.dataset.position = `${tag}:${rowIndex}:${colIndex}`;
-        btn.textContent = '';
         btn.addEventListener('click', () => {
-          if (gameEnded) {
-            return;
-          }
           const nextState = (Number(btn.dataset.state) + 1) % 3;
-          setCellState(btn, nextState);
+          setCell(btn, nextState);
         });
         td.appendChild(btn);
         tr.appendChild(td);
@@ -157,134 +207,95 @@
   }
 
   function renderGrids() {
-    gridsEl.innerHTML = '';
-    gridsEl.appendChild(makeGrid(groups.role, groups.artifact, 'role-artifact'));
-    gridsEl.appendChild(makeGrid(groups.role, groups.day, 'role-day'));
-    gridsEl.appendChild(makeGrid(groups.artifact, groups.day, 'artifact-day'));
+    const grids = document.getElementById('grids');
+    const p = state.puzzle;
+    if (!grids || !p) return;
+    grids.innerHTML = '';
+    grids.appendChild(createGrid(p.actors, p.locations, 'actor-location'));
+    grids.appendChild(createGrid(p.actors, p.clashes, 'actor-clash'));
+    grids.appendChild(createGrid(p.locations, p.clashes, 'location-clash'));
   }
 
-  function buildSolution(seed) {
-    const rand = seededRng(seed + 911);
-    const artifactOrder = pickN([0, 1, 2], 3, rand);
-    const dayOrder = pickN([0, 1, 2], 3, rand);
+  function renderVerdictBoard() {
+    const container = document.getElementById('verdictBoard');
+    const p = state.puzzle;
+    if (!container || !p) return;
 
-    const roleToArtifact = artifactOrder;
-    const roleToDay = dayOrder;
-    const artifactToDay = [0, 0, 0];
-    roleToArtifact.forEach((artifactIndex, roleIndex) => {
-      artifactToDay[artifactIndex] = roleToDay[roleIndex];
+    container.innerHTML = `
+      <div class="slot" data-slot="actor"></div>
+      <span>@</span>
+      <div class="slot" data-slot="location"></div>
+      <span>↔</span>
+      <div class="slot" data-slot="clash"></div>
+      <span class="marker">🦺</span>
+    `;
+  }
+
+  function updateHeader() {
+    const chip = document.getElementById('difficultyChip');
+    const p = state.puzzle;
+    if (!chip || !p) return;
+    chip.textContent = `${p.cfg.label} · ${p.cfg.size}×${p.cfg.size}×${p.cfg.size} · Seed ${p.seed}`;
+  }
+
+  function generate(difficultyKey) {
+    const seedInput = document.getElementById('seedInput');
+    const seed = Number(seedInput ? seedInput.value : 0) || 0;
+    state.seed = seed;
+    state.difficulty = difficultyKey;
+    state.puzzle = buildPuzzle(seed, difficultyKey);
+
+    renderLegend();
+    renderScenarioAndClues();
+    renderGrids();
+    renderVerdictBoard();
+    updateHeader();
+  }
+
+  function clearBoard() {
+    document.querySelectorAll('.cell-btn').forEach((btn) => setCell(btn, 0));
+    document.querySelectorAll('#verdictBoard .slot').forEach((slot) => {
+      slot.innerHTML = '';
     });
-
-    return {
-      roleArtifact: roleToArtifact,
-      roleDay: roleToDay,
-      artifactDay: artifactToDay,
-    };
-  }
-
-  function getExpectedState(position) {
-    if (!currentSolution) {
-      return 0;
-    }
-
-    const [tag, rowText, colText] = position.split(':');
-    const row = Number(rowText);
-    const col = Number(colText);
-
-    if (tag === 'role-artifact') {
-      return currentSolution.roleArtifact[row] === col ? 2 : 1;
-    }
-    if (tag === 'role-day') {
-      return currentSolution.roleDay[row] === col ? 2 : 1;
-    }
-
-    return currentSolution.artifactDay[row] === col ? 2 : 1;
-  }
-
-  function clearGrids() {
-    if (gameEnded) {
-      setStatus('Game has ended. Generate a new puzzle to play again.');
-      return;
-    }
-
-    document.querySelectorAll('.cell-btn').forEach((btn) => {
-      setCellState(btn, 0);
-    });
-    setStatus('Grids cleared.');
-  }
-
-  function solveAttempt() {
-    if (gameEnded) {
-      setStatus('Game has ended. Generate a new puzzle to play again.');
-      return;
-    }
-
-    const cells = [...document.querySelectorAll('.cell-btn')];
-    let mismatches = 0;
-
-    cells.forEach((btn) => {
-      const expected = getExpectedState(btn.dataset.position);
-      if (Number(btn.dataset.state) !== expected) {
-        mismatches += 1;
-      }
-    });
-
-    if (mismatches === 0) {
-      setStatus('Correct! Puzzle solved.');
-      gameEnded = true;
-      return;
-    }
-
-    setStatus(`Not solved yet — ${mismatches} cell${mismatches === 1 ? '' : 's'} still incorrect.`);
   }
 
   function revealSolution() {
-    const cells = [...document.querySelectorAll('.cell-btn')];
-    cells.forEach((btn) => {
-      setCellState(btn, getExpectedState(btn.dataset.position));
+    document.querySelectorAll('.cell-btn').forEach((btn) => {
+      const tag = btn.dataset.tag;
+      const row = Number(btn.dataset.row);
+      const col = Number(btn.dataset.col);
+      setCell(btn, expectedCellState(tag, row, col));
     });
 
-    gameEnded = true;
-    setStatus('Solution revealed. Game ended. Generate a new puzzle to play again.');
+    const p = state.puzzle;
+    if (!p) return;
+    const actorSlot = document.querySelector('.slot[data-slot="actor"]');
+    const locationSlot = document.querySelector('.slot[data-slot="location"]');
+    const clashSlot = document.querySelector('.slot[data-slot="clash"]');
+
+    if (actorSlot) actorSlot.innerHTML = icon(p.actors[p.marker.actor]);
+    if (locationSlot) locationSlot.innerHTML = icon(p.locations[p.marker.location]);
+    if (clashSlot) clashSlot.innerHTML = icon(p.clashes[p.marker.clash], 'with-marker');
   }
 
-  function generateEasy(seed) {
-    const rand = seededRng(seed);
-    const settings = difficultyRules[difficulty] || difficultyRules.easy;
+  function bindEvents() {
+    const easy = document.getElementById('generateEasyBtn');
+    const medium = document.getElementById('generateMediumBtn');
+    const hard = document.getElementById('generateHardBtn');
+    const clear = document.getElementById('clearBtn');
+    const reveal = document.getElementById('revealBtn');
+    const printBtn = document.getElementById('exportBtn');
 
-    const stories = pickN(storyPool, settings.storyCount, rand);
-    storiesEl.innerHTML = stories.map((s) => `<li>${s}</li>`).join('');
-
-    const clues = pickN(clueTemplates, settings.clueCount, rand).map((fn) => fn(groups.role, groups.artifact, groups.day));
-    cluesEl.innerHTML = clues.map((c) => `<li>${c}</li>`).join('');
-
-    clueHeadingEl.textContent = `${settings.label} clue set`;
-    renderGrids();
-    currentSolution = buildSolution(seed);
-    gameEnded = false;
-    setStatus('Puzzle generated. Fill the grids, then click Solve.');
-    document.getElementById('difficultyMarker').textContent = `Difficulty: Easy · Seed ${seed}`;
+    if (easy) easy.addEventListener('click', () => generate('easy'));
+    if (medium) medium.addEventListener('click', () => generate('medium'));
+    if (hard) hard.addEventListener('click', () => generate('hard'));
+    if (clear) clear.addEventListener('click', clearBoard);
+    if (reveal) reveal.addEventListener('click', revealSolution);
+    if (printBtn) printBtn.addEventListener('click', () => window.print());
   }
 
-  function updateGenerateButtonLabel() {
-    const settings = difficultyRules[difficultyInput.value] || difficultyRules.easy;
-    document.getElementById('generateBtn').textContent = `Generate (${settings.label})`;
-  }
-
-  difficultyInput.addEventListener('change', updateGenerateButtonLabel);
-
-  document.getElementById('generateBtn').addEventListener('click', () => {
-    const seed = Number(seedInput.value || 0);
-    generatePuzzle(seed, difficultyInput.value);
+  document.addEventListener('DOMContentLoaded', () => {
+    bindEvents();
+    generate('easy');
   });
-
-  document.getElementById('clearBtn').addEventListener('click', clearGrids);
-  document.getElementById('solveBtn').addEventListener('click', solveAttempt);
-  document.getElementById('viewSolutionBtn').addEventListener('click', revealSolution);
-
-  document.getElementById('exportBtn').addEventListener('click', () => window.print());
-
-  renderLegend();
-  updateGenerateButtonLabel();
-  generatePuzzle(Number(seedInput.value || 2026), difficultyInput.value);
 })();
