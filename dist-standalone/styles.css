@@ -51,6 +51,7 @@ h1 {
 }
 
 .toolbar input,
+.toolbar select,
 .toolbar button {
   border: 1px solid var(--line);
   background: var(--paper);
