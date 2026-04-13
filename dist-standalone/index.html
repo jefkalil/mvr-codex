@@ -3,79 +3,34 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>MODEL VS REALITY — Static SPA</title>
+    <title>Brand Drift Score Diagnostic</title>
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
-    <header class="app-header">
-      <div>
-        <h1>MODEL VS REALITY</h1>
-        <p class="subtitle">Static puzzle generator · icon-first deduction sheet</p>
-      </div>
-      <div class="difficulty-chip" id="difficultyChip">Easy · 3×3×3</div>
-    </header>
-
-    <main class="app-main">
-      <section class="toolbar no-print" aria-label="Puzzle controls">
-        <button type="button" id="generateBtn">Generate</button>
-
-        <fieldset class="difficulty-picker" aria-label="Difficulty picker">
-          <legend>Difficulty</legend>
-          <label><input type="radio" name="difficulty" value="easy" checked />Easy</label>
-          <label><input type="radio" name="difficulty" value="medium" />Medium</label>
-          <label><input type="radio" name="difficulty" value="hard" />Hard</label>
-        </fieldset>
-
-        <label class="solution-toggle" for="showSolutionToggle">
-          <input id="showSolutionToggle" type="checkbox" />
-          Show Solution
-        </label>
-
-        <button type="button" id="clearBtn">Clear</button>
-        <button type="button" id="exportBtn">Export/Print</button>
-        <label for="seedInput">Seed</label>
-        <input id="seedInput" type="number" value="2026" />
-      </section>
-
-      <section class="print-page" id="page1">
-        <h2>Page 1 — Briefing & Clues</h2>
-
-        <article class="panel">
-          <h3>Legend (labels only)</h3>
-          <p class="meta">
-            Categories: <strong>Actors</strong>, <strong>Locations</strong>, <strong>Clashes</strong>
+    <main class="app-shell" id="app" aria-live="polite">
+      <section class="card" id="quizCard">
+        <header class="card-header">
+          <p class="kicker">Brand Soul Atelier</p>
+          <h1>Brand Drift Score</h1>
+          <p class="intro">
+            A rapid strategic diagnostic designed to assess how aligned your positioning,
+            messaging, and decisions remain over time.
           </p>
-          <div id="legend" class="legend-grid"></div>
-        </article>
+        </header>
 
-        <article class="panel">
-          <h3>Scenario</h3>
-          <p id="scenarioText"></p>
-        </article>
+        <div class="progress-wrap" aria-hidden="true">
+          <div class="progress-track">
+            <div class="progress-fill" id="progressFill"></div>
+          </div>
+          <p class="progress-text" id="progressText">Question 1 of 9 · 11%</p>
+        </div>
 
-        <article class="panel">
-          <h3 id="clueTitle">Clues</h3>
-          <ol id="cluesList"></ol>
-        </article>
+        <section id="questionView" class="question-view"></section>
 
-        <article class="panel verdict-panel">
-          <h3>Final Verdict Format</h3>
-          <p>
-            Verdict: <strong>[Actor icon]</strong> @ <strong>[Location icon]</strong>
-            ↔ <strong>[Clash icon]</strong>.
-          </p>
-          <p class="meta" id="markerRuleText"></p>
-        </article>
-      </section>
-
-      <section class="print-page" id="page2">
-        <h2>Page 2 — Icon Grids & Verdict Board</h2>
-        <p class="meta">Cell cycle: blank → ❌ → ●</p>
-        <div id="grids" class="grid-wrap"></div>
-        <article class="panel solution-area">
-          <h3>Solution</h3>
-          <div id="verdictBoard" class="verdict-board"></div>
-        </article>
+        <footer class="actions">
+          <button type="button" class="btn btn-secondary" id="backBtn">Back</button>
+          <button type="button" class="btn btn-primary" id="nextBtn">Next</button>
+        </footer>
       </section>
     </main>
 
